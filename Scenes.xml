@@ -1,0 +1,1099 @@
+<SPH>
+<!--
+	* * * * * * * * * * * * * * * * * * *     Options     * * * * * * * * * * * * * * * * * * *
+
+	Windowed	- start application in window (1) or fullscreen (0)
+	WSizeX, WSizeY	-	window width & height
+
+	VSyncOff	- turn off vertical sync (1 recommended)
+	
+	timAvgCnt	- number of samples to average time values
+	barsScale	- time bars length scale
+
+	showInfo	- show device info at startup (1)
+-->
+
+	<!--<Options Windowed="0" WSizeX="1600" WSizeY="1180" VSyncOff="1"  timAvgCnt="3" barsScale="10" showInfo="0"/>-->
+	<Options Windowed="1" WSizeX="1280" WSizeY="960" VSyncOff="1"  timAvgCnt="1" barsScale="4" showInfo="1"/>
+
+
+<!--  Scene Parameters
+	All values and their defaults can be seen in Scene Info and on Sliders
+
+		- - - - - - - - - - - - - - - - - - - - -  World  - - - - - - - - - - - - - - - - - - - - -
+	World		- vec3 size of world & init (total widths = max - min)
+	Init		-  -||- of init volume (symmetric)
+
+	WorldMin, WorldMax	- vec3 min/max size of world (when not symmetric)
+	InitMin, InitMax	-  -||- of init volume
+
+	InitType	- type of volume initialization:
+				int	0 - box, 1 - random, 2 - random & box, 9 - box ignore checks
+	InitLast	- int last increment axis: 0 - X, 1 - Y, 2 - Z
+
+	CellSize	- cell size (best = 2 * particleR)
+
+
+		- - - - - - - - - - - - - - - - - - - - -  camera  - - - - - - - - - - - - - - - - - - - -
+	name		- str scene display title
+	chapter		- this scene is a begin of chapter:  chapter=""
+	default, def	- set this scene as startup: default=""
+
+	CamPos		- vec3 starting camera position
+	CamRot		- vec2 starting camera rotation angles X & Y in degrees
+
+
+			. . . . . . . . . . . . . . . . . . .    Emitter    . . . . . . . . . . . . . . . . . . .
+		EmitSize	- int width of emitter (0 = off)
+		EmitSize2	- int if 0 emitter is square, if not - height of emitter
+
+		EmitPos		- vec3 center position
+		EmitRot		- vec2 rotation angles X & Y
+
+		EmitVel		- velocity of emitted particles
+		
+		or for many as children  <Emitter ... />  (max 4)
+		with params:  size,size2, pos,rot, vel
+
+
+		dropR		- int drop sphere radius
+		rain		- int rain interval (0-none)
+
+			. . . . . . . . . . . . . . . . . . .  Accelerator   . . . . . . . . . . . . . . . . . . .
+		as children <Accel ... />  (max 4)  with params:
+		
+		pos			- vec position
+		size		- vec size (xyz, r1 y r2)
+		acc			- vec acceleration value
+		type		- shape: 0 - box, 1 - ellipse(r1,r2) cylinder Y,
+									2 - cylinder Y, smooth acc from r2
+
+			
+		. .  collider  . . . . . . . . . . . . . . . . . . . .
+	ColliderR	- sphere collider radius
+	ColliderPos	- vec3 center position
+
+	spring		- collision spring
+	damping		- damping of normal velocity
+	shear		- damping of shear velocity (off in rotor)
+
+
+		. . . . . . . . . . . . . . . . . . .    simulate    . . . . . . . . . . . . . . . . . . .
+	Particles	- int number of particles
+					(exact, not every value is possible)
+	ParticlesK	-  -||- in Kilo (*1024)
+
+	TimeStep	- simulation time step (best <= 0.003)
+	Gravity		- vec3 global acceleration (gravity on Y, other e.g. gives flow)
+
+	maxParInCell	- int max particles in cell (default 16)
+	globalDamping	- factor of global movement damping (1 = none,  0.9 - 1.0)
+
+
+		* * * * * * * * * * * * * * * * * * *    SPH    * * * * * * * * * * * * * * * * * * * * *
+	particleR	- particle radius (0.004)
+	minDist		- factor of minimal distance of particles for computation (0.8)
+
+	particleH	- smoothing radius (0.01)
+	spacing		- init distance for particles (factor of particleR, 1.35)
+
+	RestDensity	- rest fliud density (1000)
+	minDens		- factor of minimal density for computation (0.9)
+
+	Stiffness	- fluid stiffness (2,	 1 - 5)
+	Viscosity	- fluid viscosity (0.5,	 0.3 - 2.5)
+
+
+
+		. . . . . . . . . . . . . . . . . . .   Boundary   . . . . . . . . . . . . . . . . . . . .
+	distBndSoft	- soft boundary distance (factor of particleR, 8)
+	distBndHard	- hard -||- (1)
+
+	bndStiff	- soft stiffness (30000)
+	bndDamp		- soft normal damping (256, box and pump)
+	bndDampC	- -||- for cylinder and sphere bnds (60)
+
+	bndType	- int boundary type:
+					0 - Box, 1 - Cylinder Y, 2 - Cylinder Z, 3 - Cylinders Y & Z
+					4 - Sphere, 5 - Pump Y
+	bndEffZ	- int boundary effect type:
+					0 - None, 1 - Wrap Z, 2 - Cycle Z, 3 - Wave Z
+
+			//  Waves   ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
+		WaveSpeed	- speed of plane oscillation
+		WaveAmpl	- amplitude of plane oscillation
+		HSlope		- slope height
+
+
+			//  Height Map  . . . . . . . . . . . . . . . 
+		HmapType	- type of Height Map used, (default 0 - none)
+		Hheight		- y height
+		Hscale		- y scale
+		HxFq, HzFq	- x & z sin frequency
+		HxOfs,HzOfs	- x & z sin offset
+		HholeR		- sin cut amplitude for hole
+
+
+		//  pump  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+	PumpAngOut	- outlet angle
+	PumpHClose	- pump height (closing position Z)
+	PumpRadIn	- inlet cylinder radius
+
+	ExitVel		- outlet minimal exit velocity (also in bnd Cycle Z)
+	ExitDist	- outlet minimal exit distance
+
+	s1,s2, s3,s4, s5,s6 - boundary tweak parameters (see boundary Tab)
+		
+
+		//  rotor  
+	RotorType	- int type of collider (0 - sphere, 1 - rotor)
+
+	RotorAngle	- starting angle (in degrees)
+	RotorVel	- angular velocity (speed)
+
+	RotorSizes	- int3 sizes of rotor: (width 0, height 1, lenght 9)
+
+	colParR		- collider particles radius
+	colParSpc	-  -||- spacing
+		(collision params from collider, also for Hmap)
+	
+	RotorBlades	- int number of blades
+	RotorTwist	- blades twist factor
+
+		//  2nd rotor
+	Rotor2Dist	- distance between rotors (if 0, one rotor)
+	Rotor2Vel	- 2nd rotor angular velocity multipler
+	Rotor2Angle	- 2nd rotor starting angle (degrees)
+-->
+
+
+	<!--  Box  - - - - - - - - - - - - - - - - - - - - - -->
+
+	<Scene name="box small default" chapter="" Stiffness="3" />
+
+	<!--  Box Flat  -->
+	<Scene name="box Flat corner"		Stiffness="4" 
+		World="0.6 0.5 0.6"   InitMin="0.1 -0.25 0.1"	InitMax="0.3 0.25 0.3"	CamPos="0 0.04 -0.56" CamRot="8 0" />
+	<Scene name="box Flat2 center"		Stiffness="4" 
+		World="0.7 0.5 0.7"   Init="0.24 0.4 0.24"								CamPos="0 0.06 -0.61" CamRot="18 0" />
+	<Scene name="box Big corner"		Stiffness="4" 
+		World="0.9 0.5 0.9"   InitMin="-0.45 -0.25 -0.45" InitMax="-0.15 0.25 -0.2"	CamPos="0 0.08 -0.73" CamRot="20 0" />
+	<Scene name="box Maximal corner"	Stiffness="4" 
+		World="1.2 0.5 1.2"   InitMin="-0.6 -0.25 -0.6"	InitMax="-0.4 0.25 -0.4"	CamPos="0 0.23 -0.74" CamRot="30 0" />
+
+	<Scene name="box High2"		World="0.25 0.5 0.25" CamPos="0 0.00 -0.41" CamRot="10 -10"	Stiffness="4.5"  Viscosity="0.5" bndStiff="50000" spacing="1.25" />
+
+	<Scene name="box High  High Stiffness" 
+		TimeStep="0.0007" Stiffness="45" bndStiff="50000" spacing="1.37"
+		World="0.25 0.5 0.25" CamPos="0 0.00 -0.41" CamRot="10 -10"	/>
+
+
+	<!--  Box Emitter  - - - - - - - - - - - - - - - - - - - - - -->
+
+	<Scene name="box flat Emitter fountain" chapter="" 
+		World="0.6 0.5 0.6" InitMin="-0.2 -0.25 -0.2" InitMax="0.2 0.25 0.2" 
+		CamPos="0 0.04 -0.56" CamRot="5 0"
+		EmitSize="3"  EmitPos="0 -0.2 0"  EmitRot="90 0"  EmitVel="3"  dropR="6" />
+
+	<Scene name="box fountain Big" 
+		World="0.5 0.5 0.5" InitMin="-0.2 -0.25 -0.2" InitMax="0.2 0.25 0.2" 
+		CamPos="0 0.04 -0.44" CamRot="25 0"
+		EmitSize="10"  EmitPos="0 -0.21 0"  EmitRot="90 0"  EmitVel="3"  dropR="7" />
+
+	<!--  box emitters  -->
+	<Scene name="box X 3 fountains" 
+		World="0.5 0.5 0.4"  CamPos="0 0.073 -0.35" CamRot="10 -30" >
+		<Emitter size="3"  pos="-0.1 -0.2 0.0"  rot="70 90"  vel="3" />
+		<Emitter size="4"  pos=" 0.0 -0.2 0.0"  rot="90 0"  vel="3" />
+		<Emitter size="3"  pos=" 0.1 -0.2 0.0"  rot="70 270"  vel="3" />
+	</Scene>
+
+	<!--  sloping  -->
+	<Scene name="box big 4 fountains near" 
+		World="0.6 0.5 0.6" InitMin="-0.2 -0.25 -0.2" InitMax="0.2 0.25 0.2" 
+		CamPos="0 0.04 -0.44" CamRot="5 0">
+
+		<Emitter size="4" pos="-0.1 -0.20 -0.1" rot="70  45" vel="3" />
+		<Emitter size="4" pos="-0.1 -0.20  0.1" rot="70 135" vel="3" />
+		<Emitter size="4" pos=" 0.1 -0.20  0.1" rot="70 225" vel="3" />
+		<Emitter size="4" pos=" 0.1 -0.20 -0.1" rot="70 315" vel="3" />
+	</Scene>
+
+	<Scene name="box big 4 fountains Far" 
+		World="0.6 0.5 0.6" WorldMax="0.3 0.3 0.3" 
+		CamPos="0 0.04 -0.44" CamRot="5 0">
+
+		<Emitter size="3" pos="-0.2 -0.19 -0.2" rot="60  45" vel="3.5" />
+		<Emitter size="3" pos="-0.2 -0.19  0.2" rot="60 135" vel="3.5" />
+		<Emitter size="3" pos=" 0.2 -0.19  0.2" rot="60 225" vel="3.5" />
+		<Emitter size="3" pos=" 0.2 -0.19 -0.2" rot="60 315" vel="3.5" />
+	</Scene>
+
+	<Scene name="box Medium 2 emitters fountain" 
+		World="0.55 0.5 0.55" spacing="1.4" 
+		CamPos="0 0.04 -0.44" CamRot="5 0">
+
+		<Emitter size="4" pos="0 -0.20  0" rot="90 0" vel="2" />
+		<Emitter size="4" pos="0 -0.19  0" rot="90 0" vel="2" />
+	</Scene>
+
+
+	<!--  Flat  -->
+	<Scene name="box Flat 4 emitters Far x" 
+		World="0.8 0.5 0.8" 
+		CamPos="0 0.15 -0.51" CamRot="30 0">
+
+		<Emitter size="3" pos="-0.3 -0.21 -0.3" rot="10  45" vel="2.5" />
+		<Emitter size="3" pos="-0.3 -0.21  0.3" rot="10 135" vel="2.5" />
+		<Emitter size="3" pos=" 0.3 -0.21  0.3" rot="10 225" vel="2.5" />
+		<Emitter size="3" pos=" 0.3 -0.21 -0.3" rot="10 315" vel="2.5" />
+	</Scene>
+
+	<Scene name="box Flat 4 emitters Far +" 
+		World="0.8 0.5 0.8" 
+		CamPos="0 0.15 -0.51" CamRot="30 0">
+
+		<Emitter size="3" pos=" 0.0  -0.21  0.03" rot="10   0" vel="2.5" />
+		<Emitter size="3" pos=" 0.03 -0.21  0.0 " rot="10  90" vel="2.5" />
+		<Emitter size="3" pos=" 0.0  -0.21 -0.03" rot="10 180" vel="2.5" />
+		<Emitter size="3" pos="-0.03 -0.21  0.0 " rot="10 270" vel="2.5" />
+	</Scene>
+
+	<Scene name="box Flat 4 emitters Far + 1/" 
+		World="0.8 0.5 0.8" 
+		CamPos="0 0.15 -0.51" CamRot="30 -10">
+
+		<Emitter size="3" pos=" 0.0  -0.21  0.03" rot="10   0" vel="2.5" />
+		<Emitter size="3" pos="-0.03 -0.21  0.0 " rot="10 270" vel="2.5" />
+		<Emitter size="3" pos=" 0.0  -0.21 -0.03" rot="10 180" vel="2.5" />
+		<Emitter size="3" pos="0.334 -0.21 0.255 " rot="-9.9 292.3" vel="2.5" />
+	</Scene>
+
+	<Scene name="box Flat 4 emitters Far 2=" 
+		World="0.8 0.5 0.6" 
+		CamPos="0 0.15 -0.36" CamRot="36 0">
+
+		<Emitter size="3" pos="-0.3 -0.21  0.1" rot="10  90" vel="2.5" />
+		<Emitter size="3" pos="-0.3 -0.21 -0.1" rot="10  90" vel="2.5" />
+		<Emitter size="3" pos=" 0.3 -0.21  0.1" rot="10 270" vel="2.5" />
+		<Emitter size="3" pos=" 0.3 -0.21 -0.1" rot="10 270" vel="2.5" />
+	</Scene>
+
+
+	<!--  box Accel  - - - - - - - - - - - - - - - - - - - - - -->
+
+	<Scene name="box Accelerator types" chapter="" 
+		World="0.5 0.5 0.5" 
+		CamPos="0 0.12 -0.23" CamRot="33 0">
+		<Accel type="1" size="0.009 0.011 0.009" pos="-0.1 -0.18  0.1" acc="0  90 0" />
+		<Accel type="2" size="0.008 0.011 0.016" pos="-0.1 -0.18 -0.1" acc="0  90 0" />
+		<Accel type="2" size="0.015 0.011 0.010" pos=" 0.1 -0.18 -0.1" acc="0  90 0" />
+		<Accel type="3" size="0.012 0.011 0.014" pos=" 0.1 -0.18  0.1" acc="0 150 0" />
+	</Scene>
+
+	<Scene name="box accel fountain Big" 
+		World="0.5 0.5 0.5"  CamPos="0 0.0 -0.38" CamRot="24 0">
+		<Accel type="2" size="0.032 0.022 0.04" pos="0 -0.18 0" acc="0 100 0" />
+	</Scene>
+
+	<Scene name="box accel fountain Big chaotic" 
+		World="0.4 0.5 0.4"  CamPos="0 0.0 -0.38" CamRot="24 0">
+		<Accel type="2" size="0.032 0.022 0.04" pos="0 -0.18 0" acc="0 100 0" />
+	</Scene>
+
+	<Scene name="box accel 1" 
+		World="0.5 0.5 0.5" 
+		CamPos="0 0.12 -0.23" CamRot="33 0">
+		<Accel type="1" size="0.009 0.011 0.009" pos="0 -0.19  0.1" acc="0 0 -210" />
+	</Scene>
+
+	<Scene name="box accel 2" 
+		World="0.6 0.5 0.6" 
+		CamPos="0 0.12 -0.23" CamRot="33 0">
+		<Accel type="1" size="0.009 0.011 0.009" pos="-0.1 -0.21  0.1" acc="0 0 -160" />
+		<Accel type="1" size="0.011 0.011 0.009" pos="0.1 -0.21  0" acc="90 0 0" />
+	</Scene>
+
+	<Scene name="box accel 2 B" 
+		World="0.6 0.2 0.7" 
+		CamPos="0 0.095 -0.41" CamRot="54 0">
+		<Accel type="1" size="0.010 0.010 0.010" pos="-0.1 -0.06  0.1" acc="90 0 90" />
+		<Accel type="1" size="0.011 0.010 0.010" pos="-0.1 -0.06  0" acc="90 0 -90" />
+		<!--<Accel type="1" size="0.011 0.010 0.010" pos=" 0.1 -0.06 -0.1" acc="0 90 90" />-->
+	</Scene>
+
+
+	<!--  cyls Y Z  -->
+	<Scene name="Cylinders Y and Z accel 2 sphere" 
+		World="0.4 0.4 0.5"  Init="0.3 0.4 0.35"  bndType="3" 
+		CamPos="0 0.063 -0.21" CamRot="42 90"
+		ColliderPos="0.002 -0.128 -0.003" >
+		<Accel type="1" size="0.011 0.011 0.011" pos="0 -0.15 -0.1" acc="-80 30 0" />
+		<Accel type="1" size="0.011 0.011 0.011" pos="0 -0.15  0.1" acc=" 80 30 0" />
+	</Scene>
+
+
+	<!--  box Rain  - - - - - - - - - - - - - - - - - - - - - -->
+
+	<Scene name="Rain box" chapter="" 
+		rain="32" dropR="5"  Stiffness="4.4" bndStiff="46000" 
+		World ="0.5 0.5 0.4"  CamPos="0 0.04 -0.44" CamRot="15 0" />
+
+	<Scene name="Rain box max viscosity"
+		TimeStep="0.002" Viscosity="4.0" Stiffness="3" 
+		rain="40" dropR="5" 
+		World ="0.5 0.5 0.4"  CamPos="0 0.04 -0.44" CamRot="15 0" />
+
+	<Scene name="Rain box High Stiffness  viscid" spacing="1.42" 
+		TimeStep="0.0007" Viscosity="1.5" 
+		rain="200" dropR="6"  Stiffness="45" bndStiff="80000" 
+		World ="0.5 0.5 0.4"  CamPos="0 0.04 -0.44" CamRot="15 0" />
+
+	<Scene name="Rain box Flat"	rain="2" dropR="2" 
+		World ="0.7 0.5 0.6"  CamPos="0 0.04 -0.56" CamRot="8 0" />
+
+	<Scene name="Rain cylinder high" 
+		bndType="1" rain="60" dropR="8"
+		Stiffness="4.4" bndDampC="256" bndStiff="46000" 
+		World ="0.3 0.6 0.3"  CamPos="0 0.04 -0.44" CamRot="10 0" />
+
+
+	<!--  Dam break  - - - - - - - - - - - - - - - - - - - - - -->
+
+	<!--  ...  -->
+	<Scene name="Stiff  Dam break" chapter="" 
+		ParticlesK="32" spacing="1.43" 
+		TimeStep="0.0007" Stiffness="45" bndStiff="90000" 
+		World="1.0 0.5 0.16" InitMin="0.3 -0.25 -0.08" InitMax="0.5 0.25 0.08"
+		CamPos="0 -0.013 -0.45" CamRot="7 0"/>
+
+	<Scene name="Ultra Stiff  Dam break" 
+		TimeStep="0.0004" ParticlesK="32" spacing="1.41" 
+		Stiffness="160" bndStiff="90000" 
+		World="1.0 0.5 0.16" InitMin="0.3 -0.25 -0.08" InitMax="0.5 0.25 0.08"
+		CamPos="0 -0.013 -0.45" CamRot="7 0"/>
+
+	<Scene name="Stiff  Dam break wide" 
+		TimeStep="0.0007" Stiffness="42" bndStiff="70000" 
+		World="0.80 0.5 0.2" InitMin="-0.0 -0.25 -0.08" InitMax="0.4 0.25 0.08"
+		CamPos="0 -0.013 -0.37" CamRot="7 0"/>
+
+	<Scene name="Stiff  Dam break collider" 
+		TimeStep="0.0007" Stiffness="42" bndStiff="70000" 
+		World="0.70 0.5 0.12" InitMin="-0.05 -0.25 -0.06" InitMax="0.35 0.25 0.06"
+		ColliderPos="-0.16 -0.24 0.0" ColliderR="0.06"
+		CamPos="0 0.00 -0.34" CamRot="7 0"/>
+
+
+	<!--  Waves Tank  - - - - - - - - - - - - - - - - - - - - - -->
+
+	<Scene name="Tank center flow big"
+		World="0.84 0.5 0.086" Stiffness="3.0"  Viscosity="0.5" 
+		CamPos="0 -0.02 -0.39" CamRot="0 0" spacing="1.1" 
+		EmitSize="5"  EmitPos="0 -0.1 0"  EmitRot="90 0"  EmitVel="2.5"  dropR="3" />
+
+	<Scene name="Tank flow collider chaotic" 
+		World="0.84 0.5 0.086" Stiffness="4.5" Viscosity="0.5" ParticlesK="48" 
+		CamPos="0 -0.02 -0.39" CamRot="0 0"	spacing="1.1" 
+		ColliderPos="0.2 0.02 0.0" ColliderR="0.05"
+		EmitSize="5"  EmitPos="0.02 -0.129 0"  EmitRot="90 0"  EmitVel="3.0"  dropR="3" />
+
+	<Scene name="Tank minimal flow center" 
+		World="1.24 0.8 0.065" Stiffness="4.5" Viscosity="0.5" ParticlesK="48" 
+		CamPos="0 -0.0 -0.556" CamRot="0 0" spacing="1.1" bndStiff="60000" InitType="0" 
+		EmitSize="7"  EmitSize2="1"  EmitPos="0 -0.153 0"  EmitRot="90 0"  EmitVel="4.5"  dropR="1"	/>
+
+
+	<!--  Shore Waves  - - - - - - - - - - - - - - - - - - - - - -->
+
+	<Scene name="Shore waves  flat" chapter="" 
+		World="0.5 0.4 0.8" bndEffZ="3" bndDampC="0"
+		WaveSpeed="6" WaveAmpl="0.1" 
+		ColliderPos="0.027 -0.201 0.019" ColliderR="0.05"
+		CamPos="0 0.02 -0.48" CamRot="10 -90" 
+		Stiffness="3.0"  Viscosity="0.5"/>
+
+	<Scene name="Shore waves  medium high" 
+		World="0.5 0.5 1.2" bndEffZ="3" bndDampC="0"
+		bndStiff="40000" bndDamp="80" InitLast="2" 
+		WaveSpeed="6" WaveAmpl="0.056" HSlope="0.2" 
+		ColliderPos="-0.127 -0.151 0.113" ColliderR="0.1"
+		CamPos="-0.123 0.024 -0.58" CamRot="20 -93"
+		Stiffness="3.0"  Viscosity="0.5"/>
+
+	<Scene name="Shore waves  long 3m high" 
+		World="0.1 0.8 3.0" InitMin="-0.05 0.2 -1.5" InitMax="0.05 0.4 1.5" 
+		bndEffZ="3" bndDampC="0" bndStiff="34000" bndDamp="160" 
+		WaveSpeed="6" WaveAmpl="0.1" HSlope="0.2" 
+		CamPos="-0.89 0.018 -0.52" CamRot="3 -90"
+		Stiffness="4.0"  Viscosity="0.3"/>
+
+	<Scene name="Shore waves  long 5m" 
+		World="0.1 0.3 5.0" InitMin="-0.05 -0.05 -2.5" InitMax="0.05 0.15 2.5" 
+		bndEffZ="3" bndDampC="0" 
+		WaveSpeed="4.73" WaveAmpl="0.18" HSlope="0.0275" 
+		CamPos="-0.72 -0.385 -1.62" CamRot="3 -90"
+		Stiffness="3.0"  Viscosity="0.5"/>
+
+	<Scene name="Shore waves  long 5m low visc" 
+		World="0.1 0.3 5.0" InitMin="-0.05 -0.1 -2.5" InitMax="0.05 0.15 2.5" 
+		bndEffZ="3" bndDampC="0"
+		WaveSpeed="4.5" WaveAmpl="0.18" HSlope="0.0275" 
+		CamPos="-1.64 -0.084 -0.514" CamRot="3 -90"
+		Stiffness="3.0"  Viscosity="0.1"/>
+
+	<Scene name="Shore waves  thinest 10m" 
+		World="0.065 0.5 10.0" InitMin="-0.032 -0.15 -5" InitMax="0.032 0.05 5" 
+		bndEffZ="3" bndDampC="0" 
+		WaveSpeed="2.5" WaveAmpl="0.4" HSlope="0.018" 
+		CamPos="-2.0 -0.1 -2.5" CamRot="0 -90"
+		Stiffness="4.0"  Viscosity="0.5"/>
+
+	<Scene name="Stiff shore waves  thinest 5m"  ParticlesK="16" 
+		TimeStep="0.0007" Stiffness="45" Viscosity="1.0" 
+		World="0.065 0.5 5.0" InitMin="-0.032 -0.25 -2.5" InitMax="0.032 -0.05 2.5" 
+		bndEffZ="3" bndDampC="0" bndStiff="70000" InitLast="2" 
+		WaveSpeed="4" WaveAmpl="0.4" HSlope="0.028" 
+		CamPos="0.0 -0.1 -2.33" CamRot="0 -90"/>
+
+
+	<!--  Cylinder Y  - - - - - - - - - - - - - - - - - - - - - -->
+
+	<Scene name="Cylinder medium" chapter="" 
+		World="0.4 0.5 0.4"  Init="0.32 0.5 0.32"
+		bndType="1" InitType="9" bndStiff="50000" 
+		CamPos="0 0.031 -0.45" CamRot="14 0" />
+
+	<Scene name="Cylinder flat2 center" bndDampC="150" 
+		World="0.6 0.5 0.6"  Init="0.3 0.5 0.3" bndType="1"
+		CamPos="0 0.056 -0.50" CamRot="7 0" />
+
+	<Scene name="Cylinder big flow" 
+		World="0.7 0.5 0.7"  Init="0.3 0.2 0.3" bndType="1"
+		EmitSize="5" EmitPos="0 -0.206 0"  EmitRot="0 90"  EmitVel="2.5"
+		CamPos="0 0.056 -0.56" CamRot="18 18" />
+
+	<Scene name="Cylinder High" 
+		World="0.3 0.5 0.3"  bndType="1" spacing="1.21"
+		bndStiff="40000" bndDampC="220"  Stiffness="3" 
+		CamPos="0 0.031 -0.36" CamRot="7 0" />
+
+
+	<!--  Cyl Z  Pipe Flows  - - - - - - - - - - - - - - - - - - - - - -->
+
+	<Scene name="Pipe Cycle medium" chapter="" 
+		World="0.28 0.28 0.6" 
+		bndType="2" bndEffZ="2"  Gravity="0 -9.81 -0.5" 
+		ColliderPos="0.0 -0.095 0.0" ColliderR="0.05"
+		CamPos="0 -0.047 -0.32" CamRot="20 90" />
+
+	<Scene name="Pipe Cycle big" 
+		World="0.4 0.4 0.6" 
+		bndType="2" bndEffZ="2"  Gravity="0 -9.81 -1" 
+		ColliderPos="0.0 -0.14 0.0" ColliderR="0.05"
+		CamPos="0 -0.016 -0.351" CamRot="20 90" />
+
+	<Scene name="Box Flow" 
+		World="0.28 0.28 0.6"  InitType="1" 
+		bndEffZ="2"  Gravity="0 -9.81 -0.7" 
+		ColliderPos="0.0 -0.047 0.0" ColliderR="0.05"
+		CamPos="0 -0.043 -0.35" CamRot="25 90" />
+
+
+	<!--  cyl  no gravity Flows  - - - - - - - - - - - - - - - - - - - - - -->
+
+	<Scene name="No gravity small Pipe Flow" Gravity="0 0 -1" 
+		World="0.2 0.2 0.6"  bndType="2" bndEffZ="2"
+		ColliderPos="0.0 0.0 0.0" ColliderR="0.05"
+		CamPos="0 -0.013 -0.175" CamRot="0 90" />
+
+	<Scene name="No gravity small Pipe Flow chaotic" Gravity="0 0 -2.5" 
+		World="0.2 0.2 0.6"  bndType="2" bndEffZ="2"
+		ColliderPos="0.01 0.01 0.0" ColliderR="0.05"
+		CamPos="0 -0.013 -0.175" CamRot="0 90" />
+
+	<Scene name="Gravity Pipe Flow high damping" Gravity="0 -9.81 -1.5" 
+		World="0.2 0.2 0.4"  bndType="2" bndEffZ="2"
+		ColliderPos="0.006 -0.007 0.03" ColliderR="0.04"
+		spring="140" damping="0.2" shear="0.2" 
+		CamPos="0 -0.013 -0.175" CamRot="0 90" />
+
+	<Scene name="No Gravity box Flow low stiff corner" Gravity="0 0 -5" 
+		World="0.2 0.2 0.5"  bndEffZ="2" 
+		ColliderPos="-0.007 -0.021 0.019" ColliderR="0.066"
+		spring="160" damping="0.015" shear="0.015" 
+		Stiffness="1.08" Viscosity="0.7" 
+		CamPos="0 -0.01 -0.25" CamRot="19 -82" />
+
+	<!--  box  no gravity  -->
+
+	<Scene name="No Gravity box spacing high cell=smooth" 
+		Gravity="0 0 0" ParticlesK="32"  CellSize="0.01" 
+		World="0.4 0.4 0.4" Init="0.28 0.28 0.28"  spacing="1.7"
+		CamPos="0 -0.013 -0.375" CamRot="0 0" />
+
+
+	<!--  Sphere  = = = = = = = = = = = = = = = = = = = = = -->
+
+	<Scene name="Sphere"  InitType="1" chapter="" 
+		World="0.5 0.5 0.5"  bndType="4" 
+		ColliderPos="-0.2 -0.047 -0.2" ColliderR="0.05"
+		CamPos="0 0.02 -0.36" CamRot="30 45" />
+
+	<Scene name="Sphere Fountain big" 
+		World="0.5 0.5 0.5"  bndType="4" 
+		EmitSize="10"  EmitPos="0 -0.18 0"  EmitRot="90 0"  EmitVel="3.0"
+		CamPos="0 0.02 -0.38" CamRot="45 45" />
+
+	<Scene name="Sphere Fountain maximal" 
+		World="0.5 0.5 0.5"  Init="0.4 0.4 0.4" bndType="4" bndDampC="256"
+		EmitSize="10"  EmitPos="0.01 -0.14 0"  EmitRot="90 0"  EmitVel="3.5"
+		CamPos="0 0.0 -0.41" CamRot="8 50" />
+
+	<Scene name="Sphere small" 
+		World="0.36 0.36 0.36"  bndType="4" spacing="1.29" 
+		Stiffness="4.4" bndStiff="90000" 
+		CamPos="0.0 0.0 -0.30" CamRot="26 0" />
+
+	<Scene name="Sphere Big drop 128k" ParticlesK="128" 
+		World="0.8 0.8 0.8"  Init="0.4 0.4 0.4" bndType="4" 
+		dropR="8" rain="50" 
+		CamPos="0.0 0.2 -0.3" CamRot="27 0" />
+
+	<Scene name="Sphere Big explode" 
+		World="0.8 0.8 0.8"  Init="0.2 0.2 0.2" bndType="4" 
+		dropR="16" rain="200" spacing="1.1" 
+		CamPos="0.0 0.2 -0.41" CamRot="27 0" />
+
+	
+	<Scene name="Stiff  sphere fountain medium" 
+		TimeStep="0.0007" Stiffness="36" bndStiff="50000" spacing="1.43"
+		World="0.5 0.5 0.5"  Init="0.4 0.4 0.4" bndType="4" 
+		ColliderPos="-0.2 -0.047 -0.2" ColliderR="0.05"
+		CamPos="0 0.02 -0.36" CamRot="17 45">
+		<Accel type="2" size="0.017 0.018 0.017" pos="0 -0.104 0" acc="0 180 0" />
+	</Scene>
+
+	<Scene name="Stiff  sphere Big drop  viscid" 
+		TimeStep="0.0007" Stiffness="45" bndStiff="80000" spacing="1.42"
+		World="0.8 0.8 0.8"  Init="0.6 0.6 0.6" bndType="4" 
+		dropR="8" rain="200" Viscosity="1.5" 
+		CamPos="0.0 0.2 -0.4" CamRot="27 0" />
+
+
+	<!--  Box colliders  = = = = = = = = = = = = = = = = = = = = = -->
+
+	<Scene name="box collider flat" chapter="" 
+		World="0.45 0.5 0.45"  RotorAngle="90" 
+		CamPos="0.0 0.1 -0.337" CamRot="27 0" 
+		spring="80" damping="0.04" shear="0.04" 
+		RotorType="2" RotorBlades="1" RotorTwist="0" 
+		RotorVel="0"  RotorSizes="0 5 18"  ColliderPos="0.22 -0.18 0" />
+	
+	<Scene name="box collider Cube  viscid" 
+		World="0.45 0.5 0.45"  RotorAngle="90" 
+		CamPos="0.0 0.1 -0.337" CamRot="32 0" 
+		TimeStep="0.002" Stiffness="6" Viscosity="3" 
+		spring="80" damping="0.04" shear="0.04" 
+		RotorType="2" RotorBlades="1" RotorTwist="0" 
+		RotorVel="0"  RotorSizes="6 6 10"  ColliderPos="0.22 -0.18 0" />
+	
+	<Scene name="box collider flat  Cement drop" 
+		World="0.45 0.5 0.45"  RotorAngle="90" 
+		CamPos="0.0 0.1 -0.337" CamRot="32 0" 
+		globalDamping="0.99" dropR="16" rain="200" 
+		TimeStep="0.002" Stiffness="4" Viscosity="4" 
+		spring="80" damping="0.04" shear="0.04" 
+		RotorType="2" RotorBlades="1" RotorTwist="0" 
+		RotorVel="0"  RotorSizes="0 7 8"  ColliderPos="0.09 -0.2 0">
+		<Emitter size="4" pos="0.0 -0.015 -0.177" rot="-8.82 311.7" vel="3.5" />
+	</Scene>
+
+	<Scene name="box collider  viscid drop" 
+		World="0.45 0.5 0.45"  RotorAngle="90" 
+		CamPos="0.0 0.1 -0.337" CamRot="32 0" 
+		dropR="16" rain="200" 
+		TimeStep="0.002" Stiffness="8.5" Viscosity="2.6" 
+		ColliderR="0.06" ColliderPos="-0.092 -0.053 0"
+		spring="80" damping="0.04" shear="0.04" />
+
+	<Scene name="box collider emitter  shelf" 
+		World="0.45 0.5 0.45" EmitSize="3" 
+		spring="30" damping="0.1" shear="0.1" 
+		CamPos="0.0 0.1 -0.337" CamRot="36 0" 
+		RotorType="2" RotorBlades="2" RotorTwist="0" 
+		RotorVel="0"  RotorSizes="9 0 7"  ColliderPos="0.0 -0.067 0">
+		<Emitter size="3" pos="-0.0001 -0.015 -0.177" rot="0 0" vel="1.45" />
+	</Scene>
+
+	<Scene name="box collider emitter  shelf rot big" 
+		World="0.45 0.5 0.45" EmitSize="3" 
+		spring="30" damping="0.1" shear="0.1" 
+		CamPos="0.0 0.1 -0.337" CamRot="36 0" 
+		RotorType="2" RotorBlades="2" RotorTwist="0" 
+		RotorVel="0.4"  RotorSizes="19 0 17"  ColliderPos="0.0 -0.1 0">
+		<Emitter size="4" pos="0.0 -0.015 -0.177" rot="-16.4 0" vel="1.9" />
+	</Scene>
+
+
+
+	<!--  Rotors  = = = = = = = = = = = = = = = = = = = = = -->
+
+	<Scene name="box Rotor square" chapter="" 
+		World="0.45 0.5 0.45" 
+		CamPos="0.0 0.1 -0.337" CamRot="27 0" 
+		RotorType="2" RotorTwist="0.0" 
+		RotorVel="10"  ColliderPos="0 -0.20 0" />
+
+	<Scene name="box Rotor S" 
+		World="0.45 0.5 0.45" 
+		CamPos="0.0 0.1 -0.337" CamRot="27 0" 
+		RotorType="2" 
+		RotorVel="15"  ColliderPos="0 -0.20 0" />
+
+	<Scene name="box Rotor S wrong twist"	
+		World="0.45 0.5 0.45" 
+		CamPos="0.0 0.1 -0.337" CamRot="27 0" 
+		RotorType="2" RotorTwist="-0.1" 
+		RotorVel="15"  ColliderPos="0 -0.20 0" />
+
+	<Scene name="cylinder Rotor high damping" 
+		World="0.4 0.5 0.4" 
+		CamPos="0.0 0.1 -0.337" CamRot="27 0"
+		spring="140" damping="0.2" bndStiff="50000" bndDampC="150"
+		bndType="1" RotorType="2" 
+		RotorVel="17"  RotorSizes="0 3 15"  ColliderPos="0 -0.19 0" />
+
+	<Scene name="Stiff  cylinder Rotor S side" 
+		TimeStep="0.0007" Stiffness="36" bndStiff="50000" spacing="1.43"
+		World="0.45 0.5 0.45" RotorTwist="-0.056" 
+		CamPos="0.0 0.1 -0.337" CamRot="24 -8" 
+		bndType="1" RotorType="2" 
+		RotorVel="17"  ColliderPos="0.071 -0.192 0" />
+
+
+	<Scene name="sphere Rotor3" 
+		World="0.5 0.5 0.5" 
+		CamPos="0.0 0.045 -0.337" CamRot="27 0" 
+		bndType="4" RotorType="2" RotorBlades="3" 
+		RotorVel="12"  ColliderPos="0 -0.19 0" />
+
+	<Scene name="sphere Rotor6 small" 
+		World="0.5 0.5 0.5" 
+		CamPos="0.0 0.073 -0.296" CamRot="27 -37" 
+		bndType="4" RotorType="2" RotorBlades="6" RotorTwist="0.1" 
+		RotorVel="24"  RotorSizes="0 1 6"  ColliderPos="0 -0.19 0" />
+		<!--inside CamPos="0.0 0.123 -0.129" CamRot="0 0"-->
+
+	<Scene name="sphere small Rotor6 Z fast" 
+		World="0.33 0.33 0.33"  bndType="4" spacing="1.1845"
+		Stiffness="3.0" bndDampC="250"
+		CamPos="0 0.0 -0.34" CamRot="11 9" 
+		RotorType="1" RotorBlades="6" RotorTwist="0.0" 
+		RotorVel="28"  RotorSizes="0 3 15"  ColliderPos="0 0 0" />
+		<!--inside CamPos="0 0.0 -0.34" CamRot="27 -37"-->
+
+	<Scene name="box RotorZ" 
+		World="0.6 0.3 0.3" Stiffness="4" Viscosity="0.3" 
+		RotorVel="10" RotorType="1"  RotorTwist="0.06" 
+		CamPos="-0.02 0.0 -0.33" CamRot="17 0"  ColliderPos="-0.056 -0.015 0" />
+
+
+	<!--  Pumps  = = = = = = = = = = = = = = = = = = = = = -->
+
+	<Scene name="Pump square mid" chapter="" 
+		World="0.36 0.6 0.3" spacing="1.1845"
+		CamPos="-0.07 -0.08 -0.316" CamRot="9 -33" 
+		bndType="5" bndStiff="60000" 
+		Stiffness="3.0"  Gravity="0 -5 -1.5" 
+		s3="2.01" s4="0.8585" s5="0.90" s6="0.90"
+		colParR = "4" PumpAngOut = "0.15" RotorTwist="0"
+		RotorVel="10" RotorType="1"  RotorSizes="0 2 9"  ColliderPos="0 0 -0.11" />
+
+	<Scene name="Pump Side" 
+		World="0.36 0.6 0.3" spacing="1.1745"
+		CamPos="-0.07 -0.08 -0.316" CamRot="9 -33" 
+		bndType="5" bndStiff="60000" 
+		Stiffness="3.0"  Gravity="0 -5 -1.5" 
+		RotorVel="10" RotorType="1"  RotorSizes="0 4 12"  ColliderPos="0 0 -0.11" />
+
+	<Scene name="Pump S Fast" 
+		World="0.36 0.6 0.3" spacing="1.1745"
+		CamPos="-0.07 -0.08 -0.316" CamRot="9 -33" 
+		bndType="5" bndStiff="60000" 
+		Stiffness="3.0"  Gravity="0 -5 -0.5" 
+		s1="0.8328" s2="0.7944" s3="1.198" s4="0.7782" s5="0.8968" s6="0.8776" 
+		RotorVel="25" RotorType="1"  RotorSizes="0 4 12"  ColliderPos="0 0 -0.11" />
+
+	<Scene name="Pump S rotor6" 
+		World="0.36 0.6 0.3" spacing="1.1745"
+		CamPos="0.014 -0.055 -0.435" CamRot="7.5 -183" 
+		bndType="5" bndStiff="70000" 
+		Stiffness="3.5"  Gravity="0 -7 -1.5" 
+		PumpHClose="-0.02" RotorBlades="6" 
+		RotorVel="15"  RotorType="1"  RotorSizes="0 3 13"  ColliderPos="0 0 -0.11" />
+
+	<!--  High Stiff  Pumps  -->
+	<Scene name="Stiff  Pump square" 
+		TimeStep="0.0007" ParticlesK="38" spacing="1.38" 
+		Stiffness="65" bndStiff="90000" bndDamp="400" bndDampC="400" 
+		World="0.36 0.6 0.3" PumpHClose="-0.02" RotorTwist="0" 
+		CamPos="-0.07 -0.08 -0.316" CamRot="9 -33" 
+		s1="0.72" s2="0.68" s3="1.501" s4="0.89" s5="0.873" s6="0.8786" 
+		bndType="5"  Gravity="0 -9.81 0.5" PumpAngOut = "0.25" 
+		RotorVel="10" RotorType="1"  RotorSizes="0 4 13"  ColliderPos="0 0 -0.11" />
+
+		<!--  map - dim >  -->
+	<Scene name="Stiff  Pump S" 
+		TimeStep="0.0007" ParticlesK="46" spacing="1.38" 
+		Stiffness="65" bndStiff="90000" bndDamp="400" bndDampC="400" 
+		World="0.4 0.6 0.3" CamPos="-0.07 -0.08 -0.316" CamRot="9 -33" 
+		PumpAngOut="0.69"  s1="0.72" s2="0.68"  s3="1.34" s4="0.89"  s5="0.878" s6="0.883" 
+		bndType="5"  Gravity="0 -9.81 0.5" 
+		RotorVel="10" RotorType="1"  RotorSizes="0 4 14"  ColliderPos="0 0 -0.11" />
+
+	<Scene name="Stiff  Pump S b  fast Acc2 +" 
+		TimeStep="0.0007" ParticlesK="48" spacing="1.38" 
+		Stiffness="65" bndStiff="90000" bndDamp="400" bndDampC="400" 
+		World="0.4 0.7 0.3" CamPos="-0.07 -0.08 -0.316" CamRot="9 -33" 
+		PumpAngOut="0.67"  s1="0.72" s2="0.68"  s3="1.23" s4="0.93"  s5="0.883" s6="0.888" 
+		bndType="5"  Gravity="0 -9.81 0" 
+		RotorVel="22" RotorType="1"  RotorSizes="0 4 14"  ColliderPos="0 0 -0.11">
+		<Accel type="1" size="0.062 0.062 0.028" pos="0 0 0.051" acc="0 0 14" />
+		<Accel type="1" size="0.043 0.0196 0.042" pos="0.132 0.252 -0.092" acc="0 -10 0" />
+	</Scene>
+		<!--s1="0.72" s2="0.68" s3="1.34" s4="0.9" s5="0.883" s6="0.8886"--> 
+
+
+	<!--  Propeller  = = = = = = = = = = = = = = = = = = = = = -->
+
+	<Scene name="Propeller small" chapter="" 
+		World="0.2 0.2 0.4" spacing="1.3"
+		CamPos="0.0 -0.01 -0.17" CamRot="7.5 90" 
+		bndType="2" bndEffZ="2" bndStiff="70000" 
+		Stiffness="3.0"  Gravity="0 -5 0" 
+		spring="30" damping="0.0" shear="0.0" 
+		
+		colParR="2"	colParSpc="0.7"
+		RotorVel="40"  RotorBlades="3"  RotorTwist="0.15" 
+		RotorType="3"  RotorSizes="0 5 7"  ColliderPos="0 0 -0.04" />
+
+	<Scene name="Propeller medium  visc" 
+		World="0.2 0.2 0.4" spacing="1.3"
+		CamPos="0.0 -0.01 -0.20" CamRot="7.5 90" 
+		bndType="2" bndEffZ="2" bndStiff="70000" 
+		Stiffness="5.0" Viscosity="0.7" 
+		spring="44" damping="0.0" shear="0.0" 
+		
+		colParR="2"	colParSpc="0.7"
+		RotorVel="30"  RotorBlades="3"  RotorTwist="0.15" 
+		RotorType="3"  RotorSizes="0 6 10"  ColliderPos="0 0 -0.04" />
+
+	<Scene name="Propeller big" 
+		World="0.25 0.25 0.27" 
+		CamPos="0.0 -0.01 -0.20" CamRot="7.5 90" 
+		bndType="2" bndEffZ="2" bndStiff="70000" 
+		Stiffness="3.6"  Gravity="0 -5 0" 
+		spring="40" damping="0.0" shear="0.0" 
+		
+		colParR="2"	colParSpc="0.7"
+		RotorVel="30"  RotorBlades="3"  RotorTwist="0.15" 
+		RotorType="3"  RotorSizes="0 7 13"  ColliderPos="0 0 -0.02" />
+
+
+	<Scene name="Stiff  Propeller medium viscid" 
+		TimeStep="0.0007" Stiffness="45"
+		bndStiff="90000" bndDamp="500" spacing="1.37"
+		World="0.247 0.247 0.4" 
+		CamPos="0.0 -0.01 -0.20" CamRot="7.5 90" 
+		bndType="2" bndEffZ="2" Viscosity="1.5" 
+		spring="40" damping="0.0" shear="0.0" 
+		
+		colParR="2"	colParSpc="0.7"
+		RotorVel="40"  RotorBlades="3"  RotorTwist="0.15" 
+		RotorType="3"  RotorSizes="0 5 12"  ColliderPos="0 0 -0.04" />
+
+	<Scene name="Stiff  Propeller long " 
+		TimeStep="0.0007" Stiffness="45"
+		bndStiff="90000" bndDamp="500" spacing="1.43"
+		World="0.2 0.2 0.6" 
+		CamPos="0.0 -0.01 -0.20" CamRot="7.5 90" 
+		bndType="2" bndEffZ="2" Viscosity="0.7" 
+		spring="25" damping="0.0" shear="0.0" 
+		
+		colParR="2"	colParSpc="0.7"
+		RotorVel="40"  RotorBlades="3"  RotorTwist="0.15" 
+		RotorType="3"  RotorSizes="0 6 10"  ColliderPos="0 0 -0.04" />
+
+
+	<!--  2  Propellers  = = = = = = = = = = = = = = = = = = = = = -->
+
+	<Scene name="2 Propellers" chapter="" 
+		World="0.34 0.19 0.33" ParticlesK="64" 
+		CamPos="0.0 0.016 -0.25" CamRot="35 90" 
+		bndEffZ="2" bndStiff="70000" 
+		Stiffness="3.5"  Gravity="0 -5 0" 
+		spring="60" damping="0.0" shear="0.0" 
+		
+		colParR="2"	colParSpc="0.7"  Rotor2Dist="0.14"
+		RotorVel="30"  RotorBlades="3"  RotorTwist="0.15" 
+		RotorType="3"  RotorSizes="0 5 9"  ColliderPos="0 0 -0.02" />
+
+	<Scene name="2 Propellers opposite" 
+		World="0.32 0.18 0.32" ParticlesK="64" 
+		CamPos="0.0 0.0 -0.22" CamRot="90 0" 
+		bndEffZ="2" bndStiff="70000" 
+		Stiffness="3.5"  Gravity="0 -9.81 0" 
+		spring="60" damping="0.0" shear="0.0" 
+		ExitVel="0.1"
+		
+		colParR="2"	colParSpc="0.7"
+		Rotor2Dist="0.14"  Rotor2Vel="-1"  Rotor2Angle="0"
+		RotorVel="30"  RotorBlades="3"  RotorTwist="0.15" 
+		RotorType="3"  RotorSizes="0 5 9"  ColliderPos="0 0 -0.02" />
+
+	<Scene name="2 Propellers small cylinder visc" 
+		World="0.32 0.27 0.3" ParticlesK="64" 
+		CamPos="0.0 0.0 -0.24" CamRot="20 0" 
+		bndType="2"  bndEffZ="2" bndStiff="70000" 
+		Stiffness="4.0"  Gravity="0 -9.81 0" 
+		spring="60" damping="0.0" shear="0.0" 
+		ExitVel="0.1" Viscosity="0.9" 
+		
+		colParR="2"	colParSpc="0.7"
+		Rotor2Dist="0.10"  Rotor2Vel="1"  Rotor2Angle="0"
+		RotorVel="30"  RotorBlades="3"  RotorTwist="0.16" 
+		RotorType="3"  RotorSizes="0 5 7"  ColliderPos="0 0 -0.02" />
+
+	<Scene name="2 Propellers smooth visc" 
+		World="0.34 0.19 0.33" ParticlesK="64" 
+		CamPos="0.0 0.016 -0.25" CamRot="35 90" 
+		bndEffZ="2" bndStiff="70000" 
+		Stiffness="5.0" Viscosity="1.4"  Gravity="0 -9.81 0" 
+		spring="60" damping="0.0" shear="0.0" 
+		Rotor2Vel="-1"
+		colParR="1.5"	colParSpc="0.7"  Rotor2Dist="0.14"
+		RotorVel="30"  RotorBlades="3"  RotorTwist="0.15" 
+		RotorType="3"  RotorSizes="0 7 13"  ColliderPos="0 0 -0.02" />
+
+
+	<!--  Extreme  = = = = = = = = = = = = = = = = = = = = = -->
+
+	<Scene name="Extreme box 128 k" ParticlesK="128" chapter="" 
+		World="0.8 0.4 0.8" Init="0.4 0.4 0.3" Stiffness="3.0" 
+		CamPos="0 0.056 -0.63" CamRot="12 0" />
+	<Scene name="Extreme box 256 k  flat emit" ParticlesK="256" 
+		World="1.2 0.4 1.2" Init="1.2 0.4 1.2" Stiffness="3.0" 
+		EmitSize="3" 
+		CamPos="0 0.181 -0.8" CamRot="23.5 0" />
+	
+	<Scene name="Extreme box 256 k  waves dam" ParticlesK="256" 
+		bndEffZ="3" bndDampC="0" ColliderPos="-0.127 -0.122 0.002" 
+		WaveSpeed="4.5" WaveAmpl="0.1" HSlope="0.04" 
+		World="0.5 0.4 1.6" Stiffness="3.5" InitLast="2" 
+		CamPos="0.02 -0.03 -0.9" CamRot="18 -90" />
+
+	<Scene name="Extreme box 512 k  emit 4" ParticlesK="512" 
+		World="2.0 0.6 1.5" Stiffness="3.0" 
+		CamPos="0 0.279 -0.961" CamRot="29 0">
+
+		<Emitter size="7" size2="5" pos="-0.6 -0.25  0.2" rot="10  90" vel="2.5" />
+		<Emitter size="7" size2="5" pos="-0.6 -0.25 -0.2" rot="10  90" vel="2.5" />
+		<Emitter size="7" size2="5" pos=" 0.6 -0.25  0.2" rot="10 270" vel="2.5" />
+		<Emitter size="7" size2="5" pos=" 0.6 -0.25 -0.2" rot="10 270" vel="2.5" />
+	</Scene>
+
+	<Scene name="Extreme box 1 M" ParticlesK="1024" 
+		World="2.0 0.7 1.5" Init="1.5 0.7 0.8" Stiffness="4.0" 
+		CamPos="0 0.25 -1.1" CamRot="22 0" />
+
+	<Scene name="Extreme box 2 M  rain" ParticlesK="2000" 
+		dropR="14" rain="90" Stiffness="4.5" 
+		World="2.0 0.7 1.5" InitMin="-0.9 -0.35 -0.7" InitMax="0.9 -0.1 0.7" 
+		CamPos="0 0.25 -1.1" CamRot="22 0" />
+	
+	
+	<!--  Mini  more realtime  = = = = = = = = = = = = = = = = = = = = = -->
+	
+	<Scene name="Mini box 24 k" chapter="" 
+		ParticlesK="24" ColliderR="0.04" 
+		World="0.35 0.25 0.35" Init="0.2 0.25 0.2" InitLast="0" 
+		CamPos="0 0.023 -0.29" CamRot="25 0" />
+
+	<Scene name="Mini box 16 k" 
+		ParticlesK="16" ColliderR="0.03" 
+		World="0.3 0.25 0.3" Init="0.2 0.25 0.2" 
+		CamPos="0 0.023 -0.25" CamRot="22 0" />
+
+	<Scene name="Mini box 4 k emitter" 
+		ParticlesK="8" ColliderR="0.03" ColliderPos="0.02 -0.039 -0.036" 
+		World="0.4 0.2 0.3" 
+		CamPos="0 0.023 -0.25" CamRot="18 0">
+		<Emitter size="2" size2="0" pos="-0.13 0.004 -0.076" rot="18.3 73.8" vel="1.3" />
+	</Scene>
+
+	<Scene name="Mini box 1 k  tiny sphere emitter" 
+		ParticlesK="1" ColliderR="0.03" maxParInCell="8" 
+		World="0.15 0.15 0.15" bndType="4" dropR="3" bndStiff="86000" 
+		CamPos="0 0.0 -0.21" CamRot="13 0">
+		<Emitter size="1" size2="0" pos="0 -0.04 0" rot="90 0" vel="2.7" />
+	</Scene>
+
+
+	<!--  High Stiff  = = = = = = = = = = = = = = = = = = = = = -->
+
+	<Scene name="Stiff  box Flat corner" chapter="" 
+		TimeStep="0.0007" Stiffness="36" bndStiff="50000" spacing="1.43"
+		World="0.7 0.5 0.7" InitMin="0.12 -0.25 0.12" InitMax="0.35 0.25 0.35"
+		CamPos="0 0.06 -0.61" CamRot="18 0" />
+
+	<Scene name="Stiff  box big center" 
+		TimeStep="0.0007" Stiffness="36" bndStiff="50000" spacing="1.43"
+		World="0.8 0.5 0.8" InitMin="-0.12 -0.22 -0.12" InitMax="0.12 0.22 0.12"	CamPos="0 0.08 -0.63" CamRot="20 0" />
+	<Scene name="Stiff  box big2 center" 
+		TimeStep="0.0007" Stiffness="36" bndStiff="50000" spacing="1.43"
+		World="0.9 0.5 0.9" InitMin="-0.15 -0.2 -0.15" InitMax="0.15 0.2 0.15"	CamPos="0 0.08 -0.73" CamRot="20 0" />
+		
+	<Scene name="Stiff  box High center" 
+		TimeStep="0.0007" Stiffness="45" bndStiff="90000" spacing="1.42"
+		World="0.5 0.7 0.5" InitMin="-0.095 -0.3 -0.095" InitMax="0.095 0.35 0.095" InitLast="0" 
+		CamPos="0 0.06 -0.61" CamRot="18 0" />
+
+	<Scene name="Stiff  box High2 center drop" 
+		TimeStep="0.0007" Stiffness="45" bndStiff="90000" spacing="1.42"
+		World="0.45 1.2 0.5" InitMin="-0.095 -0.1 -0.095" InitMax="0.095 0.6 0.095" InitLast="0" 
+		CamPos="0 0.06 -0.81" CamRot="18 0" />
+	
+	<Scene name="Stiff  box fountain" 
+		TimeStep="0.0007" Stiffness="42" bndStiff="50000" spacing="1.38"
+		World="0.5 0.5 0.5"  CamPos="0 0.074 -0.42" CamRot="28 0">
+		<Accel type="2" size="0.014 0.018 0.014" pos="0 -0.18 0" acc="0 180 0" />
+	</Scene>
+	
+
+	<!--  Height Maps  = = = = = = = = = = = = = = = = = = = = = -->
+
+	<Scene name="HMap box" chapter="" 
+		World ="0.4 0.4 0.4" HmapType="1" Stiffness="4" Init="0.4 0.22 0.4" 
+		colParR="1.16" colParSpc="0.8276"  spring="80" damping="0.02" shear="0.0" 
+		Hheight="0.08" Hscale="0.04"  HxFq="0.8" HxOfs="0" HzFq="0.8" HzOfs="0" HholeR="-1.0" 
+		CamPos="0 0.01 -0.43" CamRot="10 0" />
+
+	<!--mid InitMin="-0.2 0.05 -0.2" InitMax="0.2 0.2 0.2"--> 
+	<Scene name="HMap hole dish emitter" 
+		World ="0.4 0.4 0.4" HmapType="1" Stiffness="4" 
+		colParR="1.16" colParSpc="0.8276"  spring="80" damping="0.02" shear="0.0" 
+		Hheight="0.2" Hscale="0.05"  HxFq="0.4" HxOfs="-90" HzFq="0.4" HzOfs="90" HholeR="-0.985" 
+		CamPos="0 0.01 -0.43" CamRot="10 0">
+		<Emitter size="4" size2="0" pos="-0.15 0.054 -0.164" rot="-22 90" vel="2.05" />
+	</Scene>
+
+	<Scene name="HMap dish cycle" 
+		World ="0.3 0.3 0.6" InitMin="-0.15 -0.05 -0.3" InitMax="0.15 0.3 0.3" 
+		HmapType="1" Stiffness="3" bndEffZ="2" Gravity="0 -9.81 1.0" 
+		colParR="1.16" colParSpc="0.8276"  spring="80" damping="0.02" shear="0.0" 
+		Hheight="0.13" Hscale="0.1"  HxFq="0.4" HxOfs="-90" HzFq="0.4" HzOfs="90" HholeR="-1.0" 
+		CamPos="0 -0.013 -0.36" CamRot="10 90">
+		<Emitter size="4" size2="0" pos="0.0 0.09 0.174" rot="-22 0" vel="2.05" />
+	</Scene>
+
+	<Scene name="HMap cycle fast" 
+		World ="0.3 0.3 0.6" InitMin="-0.15 -0.08 -0.29" InitMax="0.15 0.3 0.29" 
+		HmapType="1" Stiffness="2.5" bndEffZ="2" Gravity="0 -9.81 2.4" ParticlesK="48" 
+		colParR="1.16" colParSpc="0.8276"  spring="80" damping="0.02" shear="0.0" 
+		Hheight="0.06" Hscale="0.04"  HxFq="1.1" HxOfs="-75" HzFq="2" HzOfs="97.5" HholeR="-1.0" 
+		CamPos="0 -0.013 -0.36" CamRot="18 90">
+	</Scene>
+
+	<Scene name="HMap 4 holes emitter" 
+		World ="0.4 0.4 0.4" HmapType="1" Stiffness="4" 
+		colParR="1.16" colParSpc="0.8276"  spring="80" damping="0.02" shear="0.0" 
+		Hheight="0.2" Hscale="0.0416"  HxFq="1.6" HxOfs="90" HzFq="1.6" HzOfs="90" HholeR="-0.911" 
+		CamPos="0 0.01 -0.38" CamRot="19 0">
+		<Emitter size="4" size2="0" pos="-0.15 0.054 -0.164" rot="-22 90" vel="2.05" />
+	</Scene>
+
+	<Scene name="HMap tank 4 holes emitter big" 
+		World ="0.6 0.4 0.2" HmapType="1" Stiffness="4" 
+		colParR="1.16" colParSpc="0.8276"  spring="80" damping="0.02" shear="0.0" 
+		Hheight="0.2" Hscale="0.0"  HxFq="4.2" HxOfs="90" HzFq="0.4" HzOfs="90" HholeR="-0.685" 
+		CamPos="0 -0.03 -0.346" CamRot="19 0">
+		<Emitter size="8" size2="0" pos="-0.231 0.138 0.0" rot="8 90" vel="2.05" />
+	</Scene>
+	
+	<Scene name="HMap sieve emitter" 
+		World ="0.4 0.4 0.4" HmapType="1" Stiffness="4" 
+		colParR="1.16" colParSpc="0.8276"  spring="80" damping="0.0" shear="0.0" 
+		Hheight="0.2" Hscale="0.0"  HxFq="5" HxOfs="90" HzFq="5" HzOfs="90" HholeR="-0.75" 
+		CamPos="0 0.01 -0.43" CamRot="10 0">
+		<Emitter size="4" size2="0" pos="-0.15 0.054 -0.164" rot="-22 90" vel="2.05" />
+	</Scene>
+
+	<Scene name="HMapY dam hole" 
+		World ="0.6 0.4 0.2" HmapType="2" Stiffness="4.5" spacing="1.23" 
+		InitMin="-0.3 -0.2 -0.1" InitMax="-0.062 0.2 0.1" 
+		colParR="1.16" colParSpc="0.8276"  spring="80" damping="0.02" shear="0.0" 
+		Hheight="0.22" Hscale="0.0"  HxFq="0.4" HxOfs="-45" HzFq="0.4" HzOfs="90" HholeR="-0.985" 
+		CamPos="0 0.0 -0.346" CamRot="10 0">
+		<Emitter size="4" size2="0" pos="-0.255 0.124 -0.065" rot="-50 90" vel="2.05" />
+	</Scene>
+
+	<Scene name="Stiff  HMapY dam height holes" 
+		TimeStep="0.0007" Stiffness="45" bndStiff="90000" spacing="1.41"
+		World ="0.4 0.5 0.12" HmapType="2" InitLast="1"
+		ParticlesK="16"  InitMin="-0.2 -0.25 -0.06" InitMax="-0.035 0.25 0.06" 
+		colParR="1.16" colParSpc="0.8276"  spring="80" damping="0.02" shear="0.0" 
+		Hheight="0.15" Hscale="0.0"  HxFq="6" HxOfs="0" HzFq="0.4" HzOfs="90" HholeR="-0.685" 
+		CamPos="0 -0.01 -0.37" CamRot="7 0">
+		<Emitter size="3" size2="0" pos="-0.14 0.124 0.0" rot="-90 90" vel="5" />
+	</Scene>
+
+
+	<!--  Test  <> <> <> <> <> <> <> <> <> <> <> <> -->
+
+	<!-- <Scene name="box High 5m  drop Vel Test" def=""
+		ParticlesK="1" dropR="3" rain="100" 
+		World="0.156 5.056 0.156" Stiffness="3" bndStiff="90000" 
+		CamPos="0 0.0 -3.94" CamRot="0 0" /> -->
+
+	<!-- <Scene name="box RotorZ  Ang Vel Test" def="" 
+		World="0.6 0.3 0.3" Stiffness="4" Viscosity="0.3" 
+		RotorVel="6.283185307" RotorType="1"  RotorTwist="0.0" RotorBlades="1" 
+		CamPos="-0.02 0.0 -0.33" CamRot="17 0"  ColliderPos="-0.056 -0.02 0" /> -->
+
+	<!-- <Scene name="box  Accel Test" def="" 
+		World="0.4 0.5 0.4" Init="0.35 0.3 0.35" spacing="1.43" 
+		Stiffness="4" Gravity="0 -20 0" 
+		CamPos="0.0 0.01 -0.5" CamRot="17 0">
+		<Accel type="1" size="0.22 0.25 0.22" pos="0 0 0" acc="0 20 0" />
+	</Scene> -->
+
+
+	<!--  other  Particle R  <> <> <> <> <> <> <> <> -->
+	<!--<Scene name="Stiff  particle R = 10 mm" 
+		ParticlesK="16" RestDensity="2000" 
+		particleR="0.01" particleH="0.02" CellSize="0.02" maxParInCell="32"
+		TimeStep="0.0014" Stiffness="25" bndStiff="80000" spacing="1.31"
+		dropR="6" rain="200" 
+		World="0.9 0.5 0.9"
+		CamPos="0 0.07 -0.7" CamRot="16.3 0" />-->
+
+	<!-- <Scene name="Stiff  particle R = 1 mm" 
+		ParticlesK="32" RestDensity="1000" 
+		particleR="0.001" particleH="0.002" CellSize="0.002" maxParInCell="8"
+		TimeStep="0.0001" Stiffness="70" spacing="1.28"
+		bndStiff="160000" bndDamp="800"
+		dropR="8" rain="5000" 
+		World="0.1 0.1 0.1" ColliderR="0.01" 
+		CamPos="0 0.01 -0.1" CamRot="16.3 0" /> -->
+
+	<!--<Scene name="Stiff  particle R = 0,5 mm" def=""
+		ParticlesK="4" RestDensity="1000" 
+		particleR="0.0005" particleH="0.001" CellSize="0.001" maxParInCell="8"
+		TimeStep="0.00005" Stiffness="50" spacing="1.28"
+		bndStiff="160000" bndDamp="300"
+		dropR="4" rain="0" Viscosity="0.2"
+		World="0.03 0.03 0.03" ColliderR="0.003" 
+		CamPos="0 0.003 -0.028" CamRot="16 0" />-->
+
+</SPH>

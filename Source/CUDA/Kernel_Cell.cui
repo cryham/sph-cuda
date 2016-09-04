@@ -1,0 +1,262 @@
+
+//  Grid, Sort
+//----------------------------------------------------------------------------------------------------------------------------
+
+__device__ int3 calcGridPos(float4 p)	//  calculate position in uniform grid
+{
+	int3 gridPos;
+	float3 gp = (make_float3(p) - par.worldMin) / par.cellSize;
+	gridPos.x = floor(gp.x);	//gridPos.x = max(0, min(gridPos.x, par.gridSize.x-1));	// not needed
+	gridPos.y = floor(gp.y);	//gridPos.y = max(0, min(gridPos.y, par.gridSize.y-1));  //(clamping to edges)
+	gridPos.z = floor(gp.z);	//gridPos.z = max(0, min(gridPos.z, par.gridSize.z-1));
+	return gridPos;
+}
+
+__device__ uint calcGridHash(int3 gridPos)	//  calculate address in grid from position
+{
+	return __mul24(gridPos.z, par.gridSize_yx)
+		 + __mul24(gridPos.y, par.gridSize.x) + gridPos.x;
+}
+
+
+//  calculate grid hash value for each particle
+__global__ void calcHashD(float4* pos, uint2* particleHash)
+{
+	int index = __mul24(blockIdx.x, blockDim.x) + threadIdx.x;
+	float4 p = pos[index];
+
+	// get address in grid
+	int3 gridPos  = calcGridPos(p);
+	uint gridHash = calcGridHash(gridPos);
+
+	// store grid hash and particle index
+	particleHash[index] = make_uint2(gridHash, index);
+}
+
+
+/// rearrange particle data into sorted order,
+/// and find the start of each cell in the sorted hash array
+
+__global__ void reorderD(uint2*  particleHash, uint* cellStart, // particle id sorted by hash
+		float4* oldPos, float4* oldVel, float4* sortedPos, float4* sortedVel)
+{
+	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
+	uint2 sortedData = particleHash[index];
+
+	// Load hash data into shared memory so that we can look 
+	// at neighboring particle's hash value without loading
+	// two hash values per thread
+
+	__shared__ uint sharedHash[257];
+	sharedHash[threadIdx.x+1] = sortedData.x;
+
+	if (index > 0 && threadIdx.x == 0)
+	{
+		// first thread in block must load neighbor particle hash
+		volatile uint2 prevData = particleHash[index-1];
+		sharedHash[0] = prevData.x;
+	}
+	__syncthreads();
+
+	if (index == 0 || sortedData.x != sharedHash[threadIdx.x])
+		cellStart[sortedData.x] = index;
+
+	// Now use the sorted index to reorder the pos and vel data
+	float4 pos = FETCH(oldPos, sortedData.y);  sortedPos[index] = pos;
+	float4 vel = FETCH(oldVel, sortedData.y);  sortedVel[index] = vel;
+}
+
+
+
+//----------------------------------------------------------------------------------------------------------------------------
+///  Collide
+//----------------------------------------------------------------------------------------------------------------------------
+
+
+//  collide two spheres using DEM method
+
+__device__ float3 collideSpheres(float4 posAB, float4 velAB, float radiusAB)
+{
+	float3 relPos = make_float3(posAB);		// relative position
+	float  dist = length(relPos);
+
+	float3 force = make_float3(0.0f);
+	if (dist < radiusAB)
+	{
+		float3 relVel = make_float3(velAB);		// relative velocity
+
+		float3 norm = relPos / dist;		// relative tangential velocity
+		float3 tanVel = relVel - (dot(relVel, norm) * norm);
+
+		force = par.spring * (dist - radiusAB) * norm;		// spring
+		force += par.damping * relVel;		//  damping
+		force += par.shear * tanVel;		// tangential shear force
+	}
+	return force;
+}
+
+
+//  collide two spheres using DEM method
+
+__device__ float3 collideSpheresR(float3 posAB, float3 relVel, float radiusAB)
+{
+	float  dist = length(posAB);
+	float3 force = make_float3(0.0f);
+	if (dist < radiusAB)
+	{
+		float3 norm = posAB / dist;		// relative tangential velocity
+		//float3 tanVel = relVel - (dot(relVel, norm) * norm);
+
+		force = par.spring * (dist - radiusAB) * norm;		// spring
+		force += par.damping * relVel;		//  damping
+		//force += par.shear * tanVel;		// tangential shear force
+	}
+	return force;
+}
+
+__device__ float3 collideSpheresN(float3 posAB, float3 norm, float3 relVel, float radiusAB)
+{
+	float  dist = length(posAB);
+	float3 force = make_float3(0.0f);
+	if (dist < radiusAB)
+	{
+		norm /= dist +radiusAB;
+		//float3 tanVel = relVel - (dot(relVel, norm) * norm);
+
+		force = par.spring * (dist - radiusAB) * norm;		// spring
+		force.x=0; force.z=0;
+		//force += par.damping * relVel;		//  damping
+		//force += par.shear * tanVel;		// tangential shear force
+	}
+	return force;
+}
+
+
+///----------------------------------------------------------------------------------------------------------------------------
+///  Density
+///----------------------------------------------------------------------------------------------------------------------------
+
+
+///  density in Cell
+
+__device__ float compDensCell(int3 gridPos, uint index,  float4 pos, float4* oldPos,  uint2* particleHash, uint* cellStart)
+{
+	float dens = 0.0f;
+
+	uint gridHash = calcGridHash(gridPos);
+	uint bucketStart = FETCH(cellStart, gridHash);
+	if (bucketStart == 0xffffffff)	return dens;
+ 
+	//  iterate over particles in this cell
+	for (uint i=0; i < par.maxParInCell; i++)
+	{
+		uint index2 = bucketStart + i;
+		uint2 cellData = FETCH(particleHash, index2);
+		if (cellData.x != gridHash)  break;
+
+		if (index2 != index)	// check not colliding with self
+		{
+			float4 pos2 = FETCH(oldPos, index2);
+			
+			///  pair density
+			float4 p = pos - pos2;  // relPos
+			float r2 = p.x*p.x + p.y*p.y + p.z*p.z;
+
+			if (r2 < par.h2)
+			{
+				float c = par.h2 - r2;	// W6(r,h)
+				dens += pow(c, 3);
+			}
+		}
+	}
+	return dens;
+}
+
+
+///  compute Density  ------------------------------------------
+
+__global__ void computeDensityD(float4* clr, float4* oldPos,  float* pressure, float* density,
+		  uint2* particleHash, uint* cellStart)
+{
+	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
+
+	float4 pos = FETCH(oldPos, index);
+	int3 gridPos = calcGridPos(pos);
+
+	float sum = 0.0f;
+
+	const int s = 1;
+	for(int z=-s; z<=s; z++)
+	for(int y=-s; y<=s; y++)
+	for(int x=-s; x<=s; x++)
+		sum += compDensCell(gridPos + make_int3(x,y,z), index, pos, oldPos, particleHash, cellStart);
+
+	float dens = sum * par.Poly6Kern * par.particleMass;
+	float pres = (dens - par.restDensity) * par.stiffness;
+	
+	pressure[index] = pres;
+	density[index] = dens;
+}
+
+
+
+///----------------------------------------------------------------------------------------------------------------------------
+//   Force
+///----------------------------------------------------------------------------------------------------------------------------
+
+
+//  SPH force for pair of particles
+
+__device__ float3 compForcePair(float4 RelPos, float4 RelVel,  float p1_add_p2, float d1_mul_d2)
+{
+	float3 relPos = *(float3*)&RelPos.x;
+	float3 relVel = *(float3*)&RelVel.x;
+	float r = max(par.minDist, length(relPos));
+
+	float3 fcur = make_float3(0.0f);
+
+	if (r < par.h)
+	{
+		float c = par.h - r;
+		float pterm = c * par.SpikyKern * p1_add_p2 / r;
+		float vterm = par.LapKern * par.viscosity;
+		
+		fcur = pterm * relPos/*dV*/ + vterm * relVel;
+		fcur *= c * d1_mul_d2;
+	}
+	return fcur;
+}
+
+
+///  compute force in Cell
+
+__device__ float3 compForceCell(int3 gridPos, uint index,
+				   float4 pos, float4 vel, float4* oldPos, float4* oldVel,
+				   float pres, float dens, float* pressure, float* density,
+				   uint2* particleHash,  uint* cellStart)
+{
+	float3 force = make_float3(0.0f);
+
+	uint gridHash = calcGridHash(gridPos);
+	uint bucketStart = FETCH(cellStart, gridHash);
+	if (bucketStart == 0xffffffff)	return force;
+ 
+	//  iterate over particles in this cell
+	for (uint i=0; i < par.maxParInCell; i++)
+	{
+		uint index2 = bucketStart + i;
+		uint2 cellData = FETCH(particleHash, index2);
+		if (cellData.x != gridHash)  break;
+
+		if (index2 != index)
+		{
+			float4 pos2 = FETCH(oldPos, index2);	float4 vel2 = FETCH(oldVel, index2);
+			float pres2 = FETCH(pressure, index2);	float dens2 = FETCH(density, index2);
+			
+			float d12 = min(par.minDens, 1.0f / (dens * dens2));
+			force += compForcePair(pos - pos2,  vel2 - vel,  pres + pres2, d12);
+		}
+	}
+	return force;
+}
+
