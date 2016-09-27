@@ -17,7 +17,7 @@ Proving 5 times faster simulation of small scale fluids on GPU vs CPU.
 Install
 -------
 
-Download zip archive from releases, unpack, start SPH.exe, and hit F1 for help.
+Download zip archive from [releases](https://github.com/cryham/sph-cuda/releases), unpack, start SPH.exe, and hit F1 for help.
 
 
 [Project website](https://github.com/cryham/sph-cuda/)
