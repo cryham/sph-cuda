@@ -1,11 +1,9 @@
-SPH CUDA
---------
+## SPH CUDA
 
 ![](https://raw.githubusercontent.com/cryham/sph-cuda/master/demo-screen.jpg)
 
 
-About
------
+## About
 
 My old 2009 Windows program, from master's thesis. Implements
 
@@ -14,19 +12,17 @@ Smoothed Particle Hydrodynamics using CUDA and OpenGL, based from Particles demo
 Proving 5 times faster simulation of small scale fluids on GPU vs CPU.
 
 
-Install
--------
+## Install
 
 Download zip archive from [releases](https://github.com/cryham/sph-cuda/releases), unpack, start SPH.exe, and hit F1 for help.
 
 
-[Project website](https://github.com/cryham/sph-cuda/)
+[Project on my website](https://github.com/cryham/sph-cuda/)
 
 License: [GNU GPL v3](http://www.gnu.org/licenses/gpl-3.0.en.html).
 
 
-Features
---------
+## Features
 
 The program is very fun to play with and has a lot of scenes (119).
 
@@ -44,3 +40,8 @@ It features:
 - Moving border for shore waves generation
 - Heightmap, possibly with holes
 - Lots of simulation parameters with sliders on several tabs for tweaking
+
+
+## Screenshot
+
+![](https://raw.githubusercontent.com/cryham/sph-cuda/master/program-screen.jpg)
